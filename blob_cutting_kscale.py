@@ -1,6 +1,10 @@
-###############################################
-# cutting out cloud blobs in kscale model data
-###############################################
+################################################
+# cutting out cloud blobs in kscale model data #
+################################################ 
+
+#############
+# MODULES #
+#############
 
 import math as maths
 
@@ -13,6 +17,10 @@ import xarray as xr
 
 import easygems.healpix as egh
 
+#############
+# FUNCTIONS #
+#############
+
 import warnings
 
 # Suppress specific FutureWarnings matching the message pattern when using cat[...].to_dask()
@@ -22,10 +30,33 @@ warnings.filterwarnings(
     category=FutureWarning,
 )
 
+def get_nn_lon_lat_index(nside, lons, lats):
+    """for subsetting HEALPix ICON out onto regular lat/lon grid"""
+    lons2, lats2 = np.meshgrid(lons, lats)
+    return xr.DataArray(
+        healpy.ang2pix(nside, lons2, lats2, nest=True, lonlat=True),
+        coords=[("lat", lats), ("lon", lons)],
+    )
+
+def olr_to_bt(olr):
+    """Application of Stefan-Boltzmann law - converts outgoing longwave to cloud top temperature"""
+    sigma = 5.670373e-8
+    tf = (olr/sigma)**0.25
+    #Convert from bb to empirical BT (degC) - Yang and Slingo, 2001
+    a = 1.228
+    b = -1.106e-3
+    Tb = (-a + np.sqrt(a**2 + 4*b*tf))/(2*b)
+    return Tb - 273.15
+
+
+###############
+# DATA INPORT #
+###############
+
 cat = intake.open_catalog('https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml')['online']
 
 # Show UM simulation keys:
-#[key for key in cat if key.startswith('um_')]
+[key for key in cat if key.startswith('um_')]
 
 # um_Africa_km4p4_RAL3P3_n1280_GAL9_nest - Africa LAM convection permitting nested GAL9 
 # um_CTC_km4p4_RAL3P3_n1280_GAL9_nest - cyclic tropical channel convection permitting nested GAL9
@@ -43,7 +74,7 @@ sim = cat['um_glm_n2560_RAL3p3']
 ds = sim(zoom=8, time='PT1H').to_dask()
 
 # list variable key
-#list(ds)
+list(ds)
 
 # print information about specific variable
-#print(ds.rlut)
+print(ds.rlut)
