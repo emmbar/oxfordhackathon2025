@@ -95,9 +95,9 @@ for ddex in range(1737,2457,24):   # looping over days in April 2020 for East Af
     rlut_c = rlut_lon_lat_c.values
     Tb_c = olr_to_bt(rlut_c) # convert OLR to brightness temperature
 
-    datestr = str(rlut_lon_lat.coords['time'].values)
+    datestr = str(rlut_lon_lat_c.coords['time'].values)
     cdate = datestr[0:10]
-    ctim = [11:16]
+    ctim = datestr[11:16]
 
     #previous timestep
   
