@@ -78,3 +78,33 @@ list(ds)
 
 # print information about specific variable
 print(ds.rlut)
+
+#example defining lat / lon grid and cutting out box of OLR
+
+zoom = 8 # ~ 9km
+
+latmin, latmax = 27, 47
+lonmin, lonmax = -8, 7
+tdex = 1740 # 2020 04 01 12 00
+
+idx = get_nn_lon_lat_index(
+    2**zoom, np.linspace(latmin, latmax, (latmax-latmin)/0.1), np.linspace(lonmin, lonmax, (lonmax-lonmin)/0.1)) 
+
+ref_lon_lat = ds.rlut.isel(time=tdex,cell=idx)
+ref = ref_lon_lat.values
+lon1D = ref_lon_lat.coords['lon'].values
+lat1D = ref_lon_lat.coords['lat'].values
+lon2D, lat2D = np.meshgrid(lon1D, lat1D)
+Tb_ref = olr_to_bt(ref)
+
+f=plt.figure()
+
+a1 = f.add_subplot(111,projection=ccrs.PlateCarree())
+con1 = plt.contourf(lon2D,lat2D,Tb_ref)
+a1.grid()
+a1.coastlines()
+a1.set_yticks(np.linspace(lat2D.min(),lat2D.max(),5))
+a1.set_xticks(np.linspace(lon2D.min(),lon2D.max(),5))
+plt.colorbar(con1,shrink=0.8)
+
+plt.show()
