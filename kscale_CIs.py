@@ -1,5 +1,5 @@
 # Code for indetifying deep convective initations in kscale models
-
+# outputs text file list of CIs
 # -40C initations cooling at least 30 degrees per hour with no pre-existing cold cloud within 50km
 
 ######################
@@ -79,9 +79,11 @@ mt = datestr[14:16]
 # blob cutting          #
 #########################
 
+fi = open('East-Africa_CIs_April_1200-1800LT.txt','w')
+
 count = 0
 
-for ddex in range(1740,2460,24):   # looping over days in April 2020
+for ddex in range(1737,2457,24):   # looping over days in April 2020 for East Africa (UTC+3)
 
   for tdex in range(0,6):     # looping over hours 1200 - 1800 LT
 
@@ -92,6 +94,10 @@ for ddex in range(1740,2460,24):   # looping over days in April 2020
     rlut_lon_lat_c = ds.rlut.isel(time=sdex, cell=idx) # outgoing longwave radition OLR#
     rlut_c = rlut_lon_lat_c.values
     Tb_c = olr_to_bt(rlut_c) # convert OLR to brightness temperature
+
+    datestr = str(rlut_lon_lat.coords['time'].values)
+    cdate = datestr[0:10]
+    ctim = [11:16]
 
     #previous timestep
   
@@ -121,3 +127,30 @@ for ddex in range(1740,2460,24):   # looping over days in April 2020
         blon = lon2D[i.min():i.max()+1, j.min():j.max()+1]
         bcloud_c = Tb_c[i.min():i.max()+1, j.min():j.max()+1]
         bcloud_p = Tb_p[i.min():i.max()+1, j.min():j.max()+1]
+
+        # filter pre-existing cold cloud within 50km
+        
+        if np.min(bcloud_p) < -40:
+            continue
+
+        Tdiff = np.min(bcloud_c) - np.min(bcloud_p)
+
+        # filter for rapidly cooling pixels within 50km
+        
+        if Tdiff > -20:
+            continue
+
+        # indentify lat / lon of coldest pixel
+
+        CTTmin = np.min(bcloud_c)
+        mindex_x = np.where(bcloud_c == bcloud_c.min())[0][0]
+        mindex_y = np.where(bcloud_c == bcloud_c.min())[1][0]
+
+        clat = blat[mindex_x,mindex_y]
+        clon = blon[mindex_x,mindex_y]
+
+        print(stdate, cdate, ctim, clon, clat, sdex, file=fi)
+
+print(count,"storm cases")
+
+fi.close()
