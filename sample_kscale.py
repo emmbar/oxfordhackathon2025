@@ -83,19 +83,28 @@ print(ds.rlut)
 
 zoom = 8 # ~ 9km
 
+# define latitudes and longitudes
+
 latmin, latmax = 27, 47
 lonmin, lonmax = -8, 7
+
+# define timestep
+
 tdex = 1740 # 2020 04 01 12 00
+
+# function to create healpix indexes for requested lat/lon box
 
 idx = get_nn_lon_lat_index(
     2**zoom, np.linspace(latmin, latmax, (latmax-latmin)/0.1), np.linspace(lonmin, lonmax, (lonmax-lonmin)/0.1)) 
 
-ref_lon_lat = ds.rlut.isel(time=tdex,cell=idx)
+ref_lon_lat = ds.rlut.isel(time=tdex,cell=idx) # this extracts data from dataset (ds) for variable (rlut) at specified time and spatial (cell) indexes
+
 ref = ref_lon_lat.values
 lon1D = ref_lon_lat.coords['lon'].values
 lat1D = ref_lon_lat.coords['lat'].values
 lon2D, lat2D = np.meshgrid(lon1D, lat1D)
-Tb_ref = olr_to_bt(ref)
+
+Tb_ref = olr_to_bt(ref) # converts OLR to brightness temperature, see function above
 
 f=plt.figure()
 
